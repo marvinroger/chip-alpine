@@ -70,7 +70,7 @@ cd alpine || exit
 mkdir rootfs
 wget http://dl-cdn.alpinelinux.org/alpine/latest-stable/main/armhf/apk-tools-static-2.6.7-r0.apk
 tar -xzf apk-tools-static-2.6.7-r0.apk
-./sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/latest-stable/main -U --allow-untrusted --root ./rootfs --initdb add alpine-base alpine-mirrors
+sudo sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/latest-stable/main -U --allow-untrusted --root ./rootfs --initdb add alpine-base alpine-mirrors
 
 cp /etc/resolv.conf rootfs/etc/
 mount -t proc none rootfs/proc
@@ -78,7 +78,7 @@ mount -o bind /sys rootfs/sys
 mount -o bind /dev rootfs/dev
 
 # Install packages needed for wireless networking
-sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/latest-stable/main -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools
+sudo sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/latest-stable/main -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools
 
 cp /usr/bin/qemu-arm-static rootfs/usr/bin/
 cp ../bootstrap.sh rootfs/usr/bin
