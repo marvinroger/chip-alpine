@@ -1,0 +1,6 @@
+box: mazzolino/armhf-ubuntu:14.04
+
+build:
+  - script:
+      name: build C.H.I.P. Alpine image
+      code: ./build.sh
