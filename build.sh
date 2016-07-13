@@ -83,14 +83,14 @@ sudo sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/latest-stable/main 
 cp /usr/bin/qemu-arm-static rootfs/usr/bin/
 cp ../chroot_build.sh rootfs/usr/bin
 
-chroot rootfs /usr/bin/chroot_build
+chroot rootfs /usr/bin/chroot_build.sh
 
 umount rootfs/proc
 umount rootfs/sys
 umount rootfs/dev
 
 rm rootfs/usr/bin/qemu-arm-static
-rm rootfs/usr/bin/chroot_build
+rm rootfs/usr/bin/chroot_build.sh
 
 exit
 
