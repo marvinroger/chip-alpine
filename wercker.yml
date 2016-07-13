@@ -1,7 +1,10 @@
-box: mazzolino/armhf-ubuntu:14.04
+box: resin/armv7hf-debian:jessie
 
 build:
   steps:
+    - script:
+        name: start crossbuild
+        code: cross-build-start
     - script:
         name: build C.H.I.P. Alpine image
         code: ./build.sh
