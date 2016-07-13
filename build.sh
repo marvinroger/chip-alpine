@@ -14,11 +14,11 @@ if [[ -z "${LATEST_BASEBUILD}" ]]; then
   exit 1
 fi
 
-BASEBUILD_ROOTFS_URL="${LATEST_BASEBUILD}/images/rootfs.ubi"
+BASEBUILD_ROOTFS_URL="${LATEST_BASEBUILD}/images"
 
 mkdir basebuild
 
-if ! wget -P "basebuild" "${BASEBUILD_ROOTFS_URL}"; then
+if ! wget -P "basebuild" "${BASEBUILD_ROOTFS_URL}/rootfs.ubi"; then
   echo "download of base build failed!"
   exit $?
 fi
@@ -121,9 +121,57 @@ umount rootfs/dev
 #####
 
 echo "Preparing rootfs..."
+
+
 cp -R ~/basebuild/extracted/boot rootfs/boot
 cp -R ~/basebuild/extracted/modules rootfs/lib/modules
 
 apt-get install -y mtd-utils
 mkfs.ubifs -d rootfs -o rootfs.ubifs -e 0x1f8000 -c 2000 -m 0x4000 -x lzo
 ubinize -o rootfs.ubi -m 0x4000 -p 0x200000 -s 16384 ~/ubinize.cfg
+
+cd ~
+
+#####
+# Make Alpine release
+#####
+
+echo "Making Alpine release..."
+
+mkdir -p alpinebuild/images
+cd alpinebuild/images
+cp ../../alpine/rootfs.ubi ./
+
+if ! wget "${BASEBUILD_ROOTFS_URL}/sun5i-r8-chip.dtb"; then
+  echo "download of sun5i-r8-chip failed!"
+  exit $?
+fi
+
+if ! wget "${BASEBUILD_ROOTFS_URL}/sunxi-spl.bin"; then
+  echo "download of sunxi-spl.bin failed!"
+  exit $?
+fi
+
+if ! wget "${BASEBUILD_ROOTFS_URL}/sunxi-spl-with-ecc.bin"; then
+  echo "download of sunxi-spl-with-ecc.bin failed!"
+  exit $?
+fi
+
+if ! wget "${BASEBUILD_ROOTFS_URL}/uboot-env.bin"; then
+  echo "download of uboot-env.bin failed!"
+  exit $?
+fi
+
+if ! wget "${BASEBUILD_ROOTFS_URL}/zImage"; then
+  echo "download of zImage failed!"
+  exit $?
+fi
+
+if ! wget "${BASEBUILD_ROOTFS_URL}/u-boot-dtb.bin"; then
+  echo "download of u-boot-dtb.bin failed!"
+  exit $?
+fi
+
+tar zcvf ~/alpine.tar.gz ~/alpinebuild
+
+# tar zxvf alpine.tar.gz && sudo BUILDROOT_OUTPUT_DIR=alpinebuild/ ./chip-fel-flash.sh
