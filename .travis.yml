@@ -1,4 +1,5 @@
-language: erlang
+sudo: required
+dist: trusty
 
 script:
   - "bash -ex ./build.sh"
