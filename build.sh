@@ -81,16 +81,16 @@ mount -o bind /dev rootfs/dev
 sudo sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/latest-stable/main -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools
 
 cp /usr/bin/qemu-arm-static rootfs/usr/bin/
-cp ../bootstrap.sh rootfs/usr/bin
+cp ../chroot_build.sh rootfs/usr/bin
 
-chroot rootfs /usr/bin/bootstrap
+chroot rootfs /usr/bin/chroot_build
 
 umount rootfs/proc
 umount rootfs/sys
 umount rootfs/dev
 
 rm rootfs/usr/bin/qemu-arm-static
-rm rootfs/usr/bin/bootstrap
+rm rootfs/usr/bin/chroot_build
 
 exit
 
