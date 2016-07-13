@@ -2,6 +2,12 @@
 
 LATEST_BASEBUILD_URL="http://opensource.nextthing.co/chip/buildroot/stable/latest"
 
+CWD=$(pwd)
+mkdir basebuild
+BASEBUILD_DIR="${CWD}/basebuild"
+ALPINE_DIR="${CWD}/alpine"
+ALPINE_IMAGES_DIR="${CWD}/alpine-images"
+
 #####
 # Get the latest base buildroot image
 #####
@@ -16,9 +22,7 @@ fi
 
 BASEBUILD_ROOTFS_URL="${LATEST_BASEBUILD}/images"
 
-mkdir basebuild
-
-if ! wget -P "basebuild" "${BASEBUILD_ROOTFS_URL}/rootfs.ubi"; then
+if ! wget -P "${BASEBUILD_DIR}" "${BASEBUILD_ROOTFS_URL}/rootfs.ubi"; then
   echo "download of base build failed!"
   exit $?
 fi
@@ -29,24 +33,31 @@ fi
 
 echo "Extracting buildroot image to get the kernel..."
 
-apt-get install -y liblzo2-dev python-lzo
-wget https://bootstrap.pypa.io/ez_setup.py -O - | python
+sudo apt-get install -y liblzo2-dev python-lzo
+wget https://bootstrap.pypa.io/ez_setup.py -O - | sudo python
 git clone https://github.com/jrspruitt/ubi_reader
-cd ubi_reader
-python setup.py install
-cd ~
+cd ubi_reader || exit
+sudo python setup.py install
 
-cd basebuild
+cd "$BASEBUILD_DIR" || exit
 mkdir extracted
-cd extracted
+cd extracted || exit
 ubireader_extract_files ../rootfs.ubi
-cd ubifs-root
-cd $(ls -d */|head -n 1)
-cd rootfs
+cd ubifs-root || exit
+cd "$(find . -maxdepth 1 ! -path .|head -n 1)" || exit
+cd rootfs || exit
 cp -R boot ../../../
 cp -R lib/modules ../../../
 
-cd ~
+cd ../../../../../ || exit
+
+#####
+# Install ARM emulator
+#####
+
+echo "Installing ARM emulator..."
+
+sudo apt-get install -y qemu-user-static binfmt-support
 
 #####
 # Get and set-up Alpine
@@ -55,7 +66,7 @@ cd ~
 echo "Getting and setting-up Alpine..."
 
 mkdir alpine
-cd alpine
+cd alpine || exit
 mkdir rootfs
 wget http://dl-cdn.alpinelinux.org/alpine/latest-stable/main/armhf/apk-tools-static-2.6.7-r0.apk
 tar -xzf apk-tools-static-2.6.7-r0.apk
@@ -69,52 +80,19 @@ mount -o bind /dev rootfs/dev
 # Install packages needed for wireless networking
 sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/latest-stable/main -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools
 
-chroot rootfs /bin/sh
+cp /usr/bin/qemu-arm-static rootfs/usr/bin/
+cp ../bootstrap.sh rootfs/usr/bin
 
-### Now in the context of Alpine
-
-rc-update add devfs sysinit
-rc-update add dmesg sysinit
-rc-update add mdev sysinit
-
-rc-update add modules boot
-rc-update add sysctl boot
-rc-update add hostname boot
-rc-update add bootmisc boot
-rc-update add syslog boot
-
-rc-update add mount-ro shutdown
-rc-update add killprocs shutdown
-rc-update add savecache shutdown
-
-# Make root's home directory
-mkdir /root
-
-# Allow root login with no password.
-passwd root -d
-
-# Allow root login from serial.
-echo ttyS0 >> /etc/securetty
-echo ttyGS0 >> /etc/securetty
-
-# Make sure the USB virtual serial device is available.
-echo g_serial >> /etc/modules
-
-# Make sure wireless networking is available.
-echo 8723bs >> /etc/modules
-
-# These enable the USB virtual serial device, and the standard serial
-# pins to both be used as TTYs
-echo ttyS0::respawn:/sbin/getty -L ttyS0 115200 vt102 >> /etc/inittab
-echo ttyGS0::respawn:/sbin/getty -L ttyGS0 115200 vt102 >> /etc/inittab
-
-exit
-
-### Now out of the context of Alpine
+chroot rootfs /usr/bin/bootstrap
 
 umount rootfs/proc
 umount rootfs/sys
 umount rootfs/dev
+
+rm rootfs/usr/bin/qemu-arm-static
+rm rootfs/usr/bin/bootstrap
+
+exit
 
 #####
 # Prepare rootfs
@@ -122,15 +100,14 @@ umount rootfs/dev
 
 echo "Preparing rootfs..."
 
-
-cp -R ~/basebuild/extracted/boot rootfs/boot
-cp -R ~/basebuild/extracted/modules rootfs/lib/modules
+cp -R ../basebuild/extracted/boot rootfs/boot
+cp -R ../basebuild/extracted/modules rootfs/lib/modules
 
 apt-get install -y mtd-utils
 mkfs.ubifs -d rootfs -o rootfs.ubifs -e 0x1f8000 -c 2000 -m 0x4000 -x lzo
-ubinize -o rootfs.ubi -m 0x4000 -p 0x200000 -s 16384 ~/ubinize.cfg
+ubinize -o rootfs.ubi -m 0x4000 -p 0x200000 -s 16384 ../ubinize.cfg
 
-cd ~
+cd ../ || exit
 
 #####
 # Make Alpine release
@@ -139,7 +116,7 @@ cd ~
 echo "Making Alpine release..."
 
 mkdir -p alpinebuild/images
-cd alpinebuild/images
+cd alpinebuild/images || exit
 cp ../../alpine/rootfs.ubi ./
 
 if ! wget "${BASEBUILD_ROOTFS_URL}/sun5i-r8-chip.dtb"; then
