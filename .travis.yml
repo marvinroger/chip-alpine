@@ -1,6 +1,0 @@
-sudo: required
-dist: trusty
-language: generic
-
-script:
-  - "sudo bash -ex ./build.sh"
