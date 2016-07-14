@@ -3,10 +3,57 @@
 LATEST_BASEBUILD_URL="http://opensource.nextthing.co/chip/buildroot/stable/latest"
 
 CWD=$(pwd)
-mkdir basebuild
-BASEBUILD_DIR="${CWD}/basebuild"
-ALPINE_DIR="${CWD}/alpine"
-ALPINE_IMAGES_DIR="${CWD}/alpine-images"
+WORKING_DIR=$(mktemp -d chip-alpine.XXXXXX)
+mkdir -p "${WORKING_DIR}/basebuild/extracted"
+BASEBUILD_DIR="${WORKING_DIR}/basebuild"
+mkdir -p "${WORKING_DIR}/alpine"
+ALPINE_DIR="${WORKING_DIR}/alpine"
+mkdir -p "${WORKING_DIR}/alpine-build/images"
+ALPINE_BUILD_DIR="${CWD}/alpine-build"
+
+#####
+# Install dependencies
+#####
+
+echo "Checking and installing dependencies..."
+
+dpkg-query -l git 2> /dev/null
+if [ $? -ne 0 ]
+then
+  apt-get install -y git
+fi
+
+dpkg-query -l liblzo2-dev 2> /dev/null
+if [ $? -ne 0 ]
+then
+  apt-get install -y liblzo2-dev
+fi
+
+dpkg-query -l python-lzo 2> /dev/null
+if [ $? -ne 0 ]
+then
+  apt-get install -y python-lzo
+fi
+
+dpkg-query -l mtd-utils 2> /dev/null
+if [ $? -ne 0 ]
+then
+  apt-get install -y mtd-utils
+fi
+
+hash easy_install 2> /dev/null
+if [ $? -ne 0 ]
+then
+  wget https://bootstrap.pypa.io/ez_setup.py -O - | python
+fi
+
+hash ubireader_extract_files 2> /dev/null
+if [ $? -ne 0 ]
+then
+  git clone https://github.com/jrspruitt/ubi_reader "${WORKING_DIR}/ubi_reader"
+  cd "${WORKING_DIR}/ubi_reader" || exit
+  python setup.py install
+fi
 
 #####
 # Get the latest base buildroot image
@@ -23,7 +70,7 @@ fi
 BASEBUILD_ROOTFS_URL="${LATEST_BASEBUILD}/images"
 
 if ! wget -P "${BASEBUILD_DIR}" "${BASEBUILD_ROOTFS_URL}/rootfs.ubi"; then
-  echo "download of base build failed!"
+  echo "error: download of base build failed!"
   exit $?
 fi
 
@@ -33,31 +80,13 @@ fi
 
 echo "Extracting buildroot image to get the kernel..."
 
-sudo apt-get install -y liblzo2-dev python-lzo
-wget https://bootstrap.pypa.io/ez_setup.py -O - | sudo python
-git clone https://github.com/jrspruitt/ubi_reader
-cd ubi_reader || exit
-sudo python setup.py install
-
-cd "$BASEBUILD_DIR" || exit
-mkdir extracted
-cd extracted || exit
+cd "$BASEBUILD_DIR/extracted" || exit
 ubireader_extract_files ../rootfs.ubi
 cd ubifs-root || exit
 cd "$(find . -maxdepth 1 ! -path .|head -n 1)" || exit
 cd rootfs || exit
-cp -R boot ../../../
-cp -R lib/modules ../../../
-
-cd ../../../../../ || exit
-
-#####
-# Install ARM emulator
-#####
-
-echo "Installing ARM emulator..."
-
-sudo apt-get install -y qemu-user-static binfmt-support
+cp -R boot "$BASEBUILD_DIR/extracted"
+cp -R lib/modules "$BASEBUILD_DIR/extracted"
 
 #####
 # Get and set-up Alpine
@@ -65,12 +94,11 @@ sudo apt-get install -y qemu-user-static binfmt-support
 
 echo "Getting and setting-up Alpine..."
 
-mkdir alpine
-cd alpine || exit
+cd "$ALPINE_DIR" || exit
 mkdir rootfs
 wget http://dl-cdn.alpinelinux.org/alpine/latest-stable/main/armhf/apk-tools-static-2.6.7-r0.apk
 tar -xzf apk-tools-static-2.6.7-r0.apk
-sudo sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/latest-stable/main -U --allow-untrusted --root ./rootfs --initdb add alpine-base alpine-mirrors
+sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/latest-stable/main -U --allow-untrusted --root ./rootfs --initdb add alpine-base alpine-mirrors
 
 cp /etc/resolv.conf rootfs/etc/
 mount -t proc none rootfs/proc
@@ -78,18 +106,16 @@ mount -o bind /sys rootfs/sys
 mount -o bind /dev rootfs/dev
 
 # Install packages needed for wireless networking
-sudo sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/latest-stable/main -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools
+sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/latest-stable/main -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools
 
-cp /usr/bin/qemu-arm-static rootfs/usr/bin/
-cp ../chroot_build.sh rootfs/usr/bin
-
+# Setup Alpine from the inside
+cp "${CWD}/chroot_build.sh" rootfs/usr/bin
 chroot rootfs /usr/bin/chroot_build.sh
 
 umount rootfs/proc
 umount rootfs/sys
 umount rootfs/dev
 
-rm rootfs/usr/bin/qemu-arm-static
 rm rootfs/usr/bin/chroot_build.sh
 
 exit
@@ -100,14 +126,11 @@ exit
 
 echo "Preparing rootfs..."
 
-cp -R ../basebuild/extracted/boot rootfs/boot
-cp -R ../basebuild/extracted/modules rootfs/lib/modules
+cp -R "${BASEBUILD_DIR}/extracted/boot" rootfs/boot
+cp -R "${BASEBUILD_DIR}/extracted/modules" rootfs/lib/modules
 
-apt-get install -y mtd-utils
 mkfs.ubifs -d rootfs -o rootfs.ubifs -e 0x1f8000 -c 2000 -m 0x4000 -x lzo
-ubinize -o rootfs.ubi -m 0x4000 -p 0x200000 -s 16384 ../ubinize.cfg
-
-cd ../ || exit
+ubinize -o rootfs.ubi -m 0x4000 -p 0x200000 -s 16384 "${CWD}/ubinize.cfg"
 
 #####
 # Make Alpine release
@@ -115,9 +138,8 @@ cd ../ || exit
 
 echo "Making Alpine release..."
 
-mkdir -p alpinebuild/images
-cd alpinebuild/images || exit
-cp ../../alpine/rootfs.ubi ./
+cd "${ALPINE_BUILD_DIR}/images" || exit
+cp "${ALPINE_DIR}/rootfs.ubi" ./
 
 if ! wget "${BASEBUILD_ROOTFS_URL}/sun5i-r8-chip.dtb"; then
   echo "download of sun5i-r8-chip failed!"
@@ -149,6 +171,6 @@ if ! wget "${BASEBUILD_ROOTFS_URL}/u-boot-dtb.bin"; then
   exit $?
 fi
 
-tar zcvf ~/alpine.tar.gz ~/alpinebuild
+tar zcvf "${WORKING_DIR}/alpine.tar.gz" "${ALPINE_BUILD_DIR}"
 
 # tar zxvf alpine.tar.gz && sudo BUILDROOT_OUTPUT_DIR=alpinebuild/ ./chip-fel-flash.sh
