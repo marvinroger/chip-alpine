@@ -113,8 +113,8 @@ mount -t proc none rootfs/proc
 mount -o bind /sys rootfs/sys
 mount -o bind /dev rootfs/dev
 
-# Install packages needed for wireless networking
-sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/latest-stable/main -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools
+# Install packages needed for wireless networking + nano
+sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/latest-stable/main -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools nano
 
 # Workaround for BAD signature of libc-utils
 wget http://nl.alpinelinux.org/alpine/latest-stable/main/armhf/libc-utils-0.7-r0.apk
@@ -203,7 +203,7 @@ echo "Releasing on GitHub..."
 
 TAG_NAME="alpine-${ALPINE_VERSION_ID}_buildroot-${BUILDROOT_VERSION_ID}_$(date +%s)"
 RELEASE_NAME="Alpine ${ALPINE_VERSION_ID} with Buildroot ${BUILDROOT_VERSION_ID} built on $(date +%m/%d/%y)"
-RELEASE_BODY="To install with SDK: wget https://github.com/marvinroger/chip-alpine/releases/download/${TAG_NAME}/${TAG_NAME}.tar.gz && tar zxvf ${TAG_NAME}.tar.gz && sudo BUILDROOT_OUTPUT_DIR=alpine-build/ ./chip-fel-flash.sh"
+RELEASE_BODY="Nightly build."
 
 RELEASE_JSON=$(printf '{"tag_name": "%s","target_commitish": "master","name": "%s","body": "%s","draft": false,"prerelease": false}' "$TAG_NAME" "$RELEASE_NAME" "$RELEASE_BODY")
 UPLOAD_URL=$(curl -u "marvinroger:${GITHUB_ACCESS_TOKEN}" --data "$RELEASE_JSON" -v --silent "https://api.github.com/repos/marvinroger/chip-alpine/releases" 2>&1 | grep -Po '"upload_url": "\K([a-z0-9:/.-]+)')
