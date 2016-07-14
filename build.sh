@@ -188,7 +188,8 @@ if ! wget "${BASEBUILD_ROOTFS_URL}/u-boot-dtb.bin"; then
   exit $?
 fi
 
-tar zcvf "${WORKING_DIR}/alpine.tar.gz" "${ALPINE_BUILD_DIR}" --strip-components=2
+cd "${WORKING_DIR}"
+tar zcvf alpine.tar.gz ./alpine-build
 
 #####
 # Create GitHub release
