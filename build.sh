@@ -201,7 +201,7 @@ RELEASE_NAME="Alpine ${ALPINE_VERSION_ID} with Buildroot ${BUILDROOT_VERSION_ID}
 RELEASE_BODY="To install with SDK: tar zxvf ${TAG_NAME}.tar.gz && sudo BUILDROOT_OUTPUT_DIR=alpine-build/ ./chip-fel-flash.sh"
 
 RELEASE_JSON=$(printf '{"tag_name": "%s","target_commitish": "master","name": "%s","body": "%s","draft": false,"prerelease": false}' "$TAG_NAME" "$RELEASE_NAME" "$RELEASE_BODY")
-UPLOAD_URL=$(curl -u "marvinroger:${GITHUB_ACCESS_TOKEN}" --data "$RELEASE_JSON" "https://api.github.com/repos/marvinroger/chip-alpine/releases" | grep -Po '"upload_url": "\K([a-z0-9:/.-]+)')
+UPLOAD_URL=$(curl -u "marvinroger:${GITHUB_ACCESS_TOKEN}" --data "$RELEASE_JSON" -v --silent "https://api.github.com/repos/marvinroger/chip-alpine/releases" 2>&1 | grep -Po '"upload_url": "\K([a-z0-9:/.-]+)')
 
 echo "$UPLOAD_URL"
 
