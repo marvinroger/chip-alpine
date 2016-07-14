@@ -2,7 +2,7 @@
 
 LATEST_BASEBUILD_URL="http://opensource.nextthing.co/chip/buildroot/stable/latest"
 
-CWD=$(cd "$(dirname "${BASH_SOURCE}")"; pwd -P)
+CWD=$(cd "$(dirname "${BASH_SOURCE[0]}")" || exit; pwd -P)
 WORKING_DIR=$(mktemp -d --tmpdir=/tmp chip-alpine.XXXXXX)
 mkdir -p "${WORKING_DIR}/basebuild/extracted"
 BASEBUILD_DIR="${WORKING_DIR}/basebuild"
@@ -44,7 +44,7 @@ fi
 hash easy_install > /dev/null 2>&1
 if [ $? -ne 0 ]
 then
-  cd "${WORKING_DIR}"
+  cd "${WORKING_DIR}" || exit
   wget https://bootstrap.pypa.io/ez_setup.py -O - | python
 fi
 
@@ -86,6 +86,9 @@ ubireader_extract_files ../rootfs.ubi
 cd ubifs-root || exit
 cd "$(find . -maxdepth 1 ! -path .|head -n 1)" || exit
 cd rootfs || exit
+# shellcheck disable=SC1091
+source etc/os-release
+BUILDROOT_VERSION_ID=${VERSION_ID}
 cp -R boot "$BASEBUILD_DIR/extracted"
 cp -R lib/modules "$BASEBUILD_DIR/extracted"
 
@@ -100,6 +103,10 @@ mkdir rootfs
 wget http://dl-cdn.alpinelinux.org/alpine/latest-stable/main/armhf/apk-tools-static-2.6.7-r0.apk
 tar -xzf apk-tools-static-2.6.7-r0.apk
 sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/latest-stable/main -U --allow-untrusted --root ./rootfs --initdb add alpine-base alpine-mirrors
+
+# shellcheck disable=SC1091
+source rootfs/etc/os-release
+ALPINE_VERSION_ID=${VERSION_ID}
 
 cp /etc/resolv.conf rootfs/etc/
 mount -t proc none rootfs/proc
@@ -189,7 +196,14 @@ tar zcvf "${WORKING_DIR}/alpine.tar.gz" "${ALPINE_BUILD_DIR}"
 
 echo "Releasing on GitHub..."
 
+TAG_NAME="alpine-${ALPINE_VERSION_ID}_buildroot-${BUILDROOT_VERSION_ID}_$(date +%s)"
+RELEASE_NAME="Alpine ${ALPINE_VERSION_ID} with Buildroot ${BUILDROOT_VERSION_ID} built $(date +%m/%d/%y)"
+RELEASE_BODY="To install with SDK: tar zxvf ${TAG_NAME}.tar.gz && sudo BUILDROOT_OUTPUT_DIR=alpine-build/ ./chip-fel-flash.sh"
 
+RELEASE_JSON=$(printf '{"tag_name": "%s","target_commitish": "master","name": "v%s","body": "Release of version %s","draft": false,"prerelease": false}' "$TAG_NAME" "$RELEASE_NAME" "$RELEASE_BODY")
+curl --data "$RELEASE_JSON" "https://api.github.com/repos/marvinroger/chip-alpine/releases?access_token=${GITHUB_ACCESS_TOKEN}"
+
+curl -X POST -H "Content-Type: application/gzip" --data-binary "@${WORKING_DIR}/alpine.tar.gz" "https://api.github.com/repos/marvinroger/chip-alpine/releases/tags/${TAG_NAME}/assets?access_token=${GITHUB_ACCESS_TOKEN}&name=${TAG_NAME}.tar.gz"
 
 echo "Done!"
 
