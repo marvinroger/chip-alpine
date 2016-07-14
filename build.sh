@@ -188,7 +188,7 @@ if ! wget "${BASEBUILD_ROOTFS_URL}/u-boot-dtb.bin"; then
   exit $?
 fi
 
-tar -zcv -C "${WORKING_DIR}" -f alpine.tar.gz alpine-build
+tar -zcv -C "${WORKING_DIR}" -f "${WORKING_DIR}/alpine.tar.gz" alpine-build
 
 #####
 # Create GitHub release
@@ -202,8 +202,6 @@ RELEASE_BODY="To install with SDK: https://github.com/marvinroger/chip-alpine/re
 
 RELEASE_JSON=$(printf '{"tag_name": "%s","target_commitish": "master","name": "%s","body": "%s","draft": false,"prerelease": false}' "$TAG_NAME" "$RELEASE_NAME" "$RELEASE_BODY")
 UPLOAD_URL=$(curl -u "marvinroger:${GITHUB_ACCESS_TOKEN}" --data "$RELEASE_JSON" -v --silent "https://api.github.com/repos/marvinroger/chip-alpine/releases" 2>&1 | grep -Po '"upload_url": "\K([a-z0-9:/.-]+)')
-
-echo "$UPLOAD_URL"
 
 curl -u "marvinroger:${GITHUB_ACCESS_TOKEN}" -X POST -H "Content-Type: application/gzip" --data-binary "@${WORKING_DIR}/alpine.tar.gz" "${UPLOAD_URL}?name=${TAG_NAME}.tar.gz"
 
