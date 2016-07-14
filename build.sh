@@ -117,9 +117,8 @@ umount rootfs/proc
 umount rootfs/sys
 umount rootfs/dev
 
+rm rootfs/etc/resolv.conf
 rm rootfs/usr/bin/chroot_build.sh
-
-exit
 
 #####
 # Prepare rootfs
@@ -130,8 +129,18 @@ echo "Preparing rootfs..."
 cp -R "${BASEBUILD_DIR}/extracted/boot" rootfs/boot
 cp -R "${BASEBUILD_DIR}/extracted/modules" rootfs/lib/modules
 
+cat <<EOF >ubinize.cfg
+[ubifs]
+mode=ubi
+vol_id=0
+vol_type=dynamic
+vol_name=rootfs
+vol_alignment=1
+vol_flags=autoresize
+image=rootfs.ubifs
+EOF
 mkfs.ubifs -d rootfs -o rootfs.ubifs -e 0x1f8000 -c 2000 -m 0x4000 -x lzo
-ubinize -o rootfs.ubi -m 0x4000 -p 0x200000 -s 16384 "${CWD}/ubinize.cfg"
+ubinize -o rootfs.ubi -m 0x4000 -p 0x200000 -s 16384 ubinize.cfg
 
 #####
 # Make Alpine release
@@ -173,5 +182,15 @@ if ! wget "${BASEBUILD_ROOTFS_URL}/u-boot-dtb.bin"; then
 fi
 
 tar zcvf "${WORKING_DIR}/alpine.tar.gz" "${ALPINE_BUILD_DIR}"
+
+#####
+# Create GitHub release
+#####
+
+echo "Releasing on GitHub..."
+
+
+
+echo "Done!"
 
 # tar zxvf alpine.tar.gz && sudo BUILDROOT_OUTPUT_DIR=alpinebuild/ ./chip-fel-flash.sh

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 rc-update add devfs sysinit
 rc-update add dmesg sysinit
