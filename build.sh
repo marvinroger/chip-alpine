@@ -120,6 +120,9 @@ sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/latest-stable/main -U --
 wget http://nl.alpinelinux.org/alpine/latest-stable/main/armhf/libc-utils-0.7-r0.apk
 cp libc-utils-0.7-r0.apk rootfs/home
 
+# Add apk repo
+echo "http://http://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION_ID%.[0-9]*}/main" > rootfs/etc/apk/repositories
+
 # Setup Alpine from the inside
 cp "${CWD}/chroot_build.sh" rootfs/usr/bin
 chroot rootfs /usr/bin/chroot_build.sh

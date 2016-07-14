@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 # Workaround for BAD signature of libc-utils
-apk add --allow-untrusted /home/libc-utils-0.7-r0.apk
+apk add --allow-untrusted /home/libc-utils-0.7-r0.apk 
 
 rc-update add devfs sysinit
 rc-update add dmesg sysinit
@@ -12,7 +12,7 @@ rc-update add sysctl boot
 rc-update add hostname boot
 rc-update add bootmisc boot
 rc-update add syslog boot
-rc-update add wpa_supplicant boot
+#rc-update add wpa_supplicant boot
 #rc-update add networking boot
 
 rc-update add mount-ro shutdown
