@@ -114,7 +114,7 @@ mount -o bind /sys rootfs/sys
 mount -o bind /dev rootfs/dev
 
 # Install packages needed for wireless networking + nano
-sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/latest-stable/main -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools nano
+sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/latest-stable/main -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools bkeymaps nano
 
 # Workaround for BAD signature of libc-utils
 wget http://nl.alpinelinux.org/alpine/latest-stable/main/armhf/libc-utils-0.7-r0.apk
