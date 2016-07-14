@@ -113,15 +113,12 @@ mount -t proc none rootfs/proc
 mount -o bind /sys rootfs/sys
 mount -o bind /dev rootfs/dev
 
-# Install packages needed for wireless networking + nano
+# Install packages needed for wireless networking + nano + tzdata and bkeymaps needed for setup-alpine
 sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/latest-stable/main -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools bkeymaps tzdata nano
 
 # Workaround for BAD signature of libc-utils
 wget http://nl.alpinelinux.org/alpine/latest-stable/main/armhf/libc-utils-0.7-r0.apk
 cp libc-utils-0.7-r0.apk rootfs/home
-
-# Add apk repo
-echo "http://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION_ID%.[0-9]*}/main" > rootfs/etc/apk/repositories
 
 # Setup Alpine from the inside
 cp "${CWD}/chroot_build.sh" rootfs/usr/bin

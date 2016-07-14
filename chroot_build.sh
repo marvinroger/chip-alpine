@@ -13,8 +13,7 @@ rc-update add sysctl boot
 rc-update add hostname boot
 rc-update add bootmisc boot
 rc-update add syslog boot
-#rc-update add wpa_supplicant boot
-#rc-update add networking boot
+rc-update add wpa_supplicant boot # needed, otherwise does not connect after reboot
 
 rc-update add mount-ro shutdown
 rc-update add killprocs shutdown
