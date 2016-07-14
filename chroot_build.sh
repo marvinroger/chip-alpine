@@ -1,5 +1,8 @@
 #!/usr/bin/env sh
 
+# Workaround for BAD signature of libc-utils
+apk add --allow-untrusted /home/libc-utils-0.7-r0.apk
+
 rc-update add devfs sysinit
 rc-update add dmesg sysinit
 rc-update add mdev sysinit
