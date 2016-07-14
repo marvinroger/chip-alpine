@@ -44,6 +44,7 @@ fi
 hash easy_install 2>&1 /dev/null
 if [ $? -ne 0 ]
 then
+  cd "${WORKING_DIR}"
   wget https://bootstrap.pypa.io/ez_setup.py -O - | python
 fi
 
