@@ -2,14 +2,14 @@
 
 LATEST_BASEBUILD_URL="http://opensource.nextthing.co/chip/buildroot/stable/latest"
 
-CWD=$(pwd)
+CWD=$(cd "$(dirname "${BASH_SOURCE}")"; pwd -P)
 WORKING_DIR=$(mktemp -d --tmpdir=/tmp chip-alpine.XXXXXX)
 mkdir -p "${WORKING_DIR}/basebuild/extracted"
 BASEBUILD_DIR="${WORKING_DIR}/basebuild"
 mkdir -p "${WORKING_DIR}/alpine"
 ALPINE_DIR="${WORKING_DIR}/alpine"
 mkdir -p "${WORKING_DIR}/alpine-build/images"
-ALPINE_BUILD_DIR="${CWD}/alpine-build"
+ALPINE_BUILD_DIR="${WORKING_DIR}/alpine-build"
 
 #####
 # Install dependencies
@@ -17,38 +17,38 @@ ALPINE_BUILD_DIR="${CWD}/alpine-build"
 
 echo "Checking and installing dependencies..."
 
-dpkg-query -l git 2>&1 /dev/null
+dpkg-query -l git > /dev/null 2>&1
 if [ $? -ne 0 ]
 then
   apt-get install -y git
 fi
 
-dpkg-query -l liblzo2-dev 2>&1 /dev/null
+dpkg-query -l liblzo2-dev > /dev/null 2>&1
 if [ $? -ne 0 ]
 then
   apt-get install -y liblzo2-dev
 fi
 
-dpkg-query -l python-lzo 2>&1 /dev/null
+dpkg-query -l python-lzo > /dev/null 2>&1
 if [ $? -ne 0 ]
 then
   apt-get install -y python-lzo
 fi
 
-dpkg-query -l mtd-utils 2>&1 /dev/null
+dpkg-query -l mtd-utils > /dev/null 2>&1
 if [ $? -ne 0 ]
 then
   apt-get install -y mtd-utils
 fi
 
-hash easy_install 2>&1 /dev/null
+hash easy_install > /dev/null 2>&1
 if [ $? -ne 0 ]
 then
   cd "${WORKING_DIR}"
   wget https://bootstrap.pypa.io/ez_setup.py -O - | python
 fi
 
-hash ubireader_extract_files 2>&1 /dev/null
+hash ubireader_extract_files > /dev/null 2>&1
 if [ $? -ne 0 ]
 then
   git clone https://github.com/jrspruitt/ubi_reader "${WORKING_DIR}/ubi_reader"
