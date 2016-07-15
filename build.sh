@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+PATH=/usr/bin:/bin:/usr/local/bin
 LATEST_BASEBUILD_URL="http://opensource.nextthing.co/chip/buildroot/stable/latest"
 
 CWD=$(cd "$(dirname "${BASH_SOURCE[0]}")" || exit; pwd -P)
