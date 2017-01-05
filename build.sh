@@ -20,44 +20,17 @@ ALPINE_BUILD_DIR="${WORKING_DIR}/alpine-build"
 
 echo "Checking and installing dependencies..."
 
-dpkg-query -l git > /dev/null 2>&1 || true
-if [ $? -ne 0 ]
-then
-  sudo apt-get install -y git
-fi
+# apt dependencies
+sudo apt-get install -y git liblzo2-dev python-lzo mtd-utils
 
-dpkg-query -l liblzo2-dev > /dev/null 2>&1 || true
-if [ $? -ne 0 ]
-then
-  sudo apt-get install -y liblzo2-dev
-fi
+# easy_install
+cd "${WORKING_DIR}" || exit
+wget https://bootstrap.pypa.io/ez_setup.py -O - | sudo python
 
-dpkg-query -l python-lzo > /dev/null 2>&1 || true
-if [ $? -ne 0 ]
-then
-  sudo apt-get install -y python-lzo
-fi
-
-dpkg-query -l mtd-utils > /dev/null 2>&1 || true
-if [ $? -ne 0 ]
-then
-  sudo apt-get install -y mtd-utils
-fi
-
-hash easy_install > /dev/null 2>&1 || true
-if [ $? -ne 0 ]
-then
-  cd "${WORKING_DIR}" || exit
-  wget https://bootstrap.pypa.io/ez_setup.py -O - | sudo python
-fi
-
-hash ubireader_extract_files > /dev/null 2>&1 || true
-if [ $? -ne 0 ]
-then
-  git clone https://github.com/jrspruitt/ubi_reader "${WORKING_DIR}/ubi_reader"
-  cd "${WORKING_DIR}/ubi_reader" || exit
-  python setup.py install
-fi
+# ubi_reader
+git clone https://github.com/jrspruitt/ubi_reader "${WORKING_DIR}/ubi_reader"
+cd "${WORKING_DIR}/ubi_reader" || exit
+sudo python setup.py install
 
 #####
 # Get the latest base buildroot image
@@ -73,10 +46,8 @@ fi
 
 BASEBUILD_ROOTFS_URL="${LATEST_BASEBUILD}/images"
 
-if ! wget -P "${BASEBUILD_DIR}" "${BASEBUILD_ROOTFS_URL}/rootfs.ubi"; then
-  echo "error: download of base build failed!"
-  exit $?
-fi
+# download basebuild
+wget -P "${BASEBUILD_DIR}" "${BASEBUILD_ROOTFS_URL}/rootfs.ubi"
 
 #####
 # Extract the ubi file to get the kernel
@@ -112,9 +83,9 @@ source rootfs/etc/os-release
 ALPINE_VERSION_ID=${VERSION_ID}
 
 cp /etc/resolv.conf rootfs/etc/
-mount -t proc none rootfs/proc
-mount -o bind /sys rootfs/sys
-mount -o bind /dev rootfs/dev
+sudo mount -t proc none rootfs/proc
+sudo mount -o bind /sys rootfs/sys
+sudo mount -o bind /dev rootfs/dev
 
 # Install packages needed for wireless networking + nano + tzdata and bkeymaps needed for setup-alpine
 sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/latest-stable/main -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools bkeymaps tzdata nano
@@ -127,9 +98,9 @@ cp libc-utils-0.7-r0.apk rootfs/home
 cp "${CWD}/chroot_build.sh" rootfs/usr/bin
 chroot rootfs /usr/bin/chroot_build.sh
 
-umount rootfs/proc
-umount rootfs/sys
-umount rootfs/dev
+sudo umount rootfs/proc
+sudo umount rootfs/sys
+sudo umount rootfs/dev
 
 rm rootfs/etc/resolv.conf
 rm rootfs/usr/bin/chroot_build.sh
@@ -166,35 +137,12 @@ echo "Making Alpine release..."
 cd "${ALPINE_BUILD_DIR}/images" || exit
 cp "${ALPINE_DIR}/rootfs.ubi" ./
 
-if ! wget "${BASEBUILD_ROOTFS_URL}/sun5i-r8-chip.dtb"; then
-  echo "download of sun5i-r8-chip failed!"
-  exit $?
-fi
-
-if ! wget "${BASEBUILD_ROOTFS_URL}/sunxi-spl.bin"; then
-  echo "download of sunxi-spl.bin failed!"
-  exit $?
-fi
-
-if ! wget "${BASEBUILD_ROOTFS_URL}/sunxi-spl-with-ecc.bin"; then
-  echo "download of sunxi-spl-with-ecc.bin failed!"
-  exit $?
-fi
-
-if ! wget "${BASEBUILD_ROOTFS_URL}/uboot-env.bin"; then
-  echo "download of uboot-env.bin failed!"
-  exit $?
-fi
-
-if ! wget "${BASEBUILD_ROOTFS_URL}/zImage"; then
-  echo "download of zImage failed!"
-  exit $?
-fi
-
-if ! wget "${BASEBUILD_ROOTFS_URL}/u-boot-dtb.bin"; then
-  echo "download of u-boot-dtb.bin failed!"
-  exit $?
-fi
+wget "${BASEBUILD_ROOTFS_URL}/sun5i-r8-chip.dtb"
+wget "${BASEBUILD_ROOTFS_URL}/sunxi-spl.bin"
+wget "${BASEBUILD_ROOTFS_URL}/sunxi-spl-with-ecc.bin"
+wget "${BASEBUILD_ROOTFS_URL}/uboot-env.bin"
+wget "${BASEBUILD_ROOTFS_URL}/zImage"
+wget "${BASEBUILD_ROOTFS_URL}/u-boot-dtb.bin"
 
 tar -zcv -C "${WORKING_DIR}" -f "${WORKING_DIR}/alpine.tar.gz" alpine-build
 
