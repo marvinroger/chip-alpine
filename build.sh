@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 PATH=/usr/bin:/bin:/usr/local/bin:/usr/sbin
 LATEST_BASEBUILD_URL="http://opensource.nextthing.co/chip/buildroot/stable/latest"
 
@@ -21,32 +23,32 @@ echo "Checking and installing dependencies..."
 dpkg-query -l git > /dev/null 2>&1
 if [ $? -ne 0 ]
 then
-  apt-get install -y git
+  sudo apt-get install -y git
 fi
 
 dpkg-query -l liblzo2-dev > /dev/null 2>&1
 if [ $? -ne 0 ]
 then
-  apt-get install -y liblzo2-dev
+  sudo apt-get install -y liblzo2-dev
 fi
 
 dpkg-query -l python-lzo > /dev/null 2>&1
 if [ $? -ne 0 ]
 then
-  apt-get install -y python-lzo
+  sudo apt-get install -y python-lzo
 fi
 
 dpkg-query -l mtd-utils > /dev/null 2>&1
 if [ $? -ne 0 ]
 then
-  apt-get install -y mtd-utils
+  sudo apt-get install -y mtd-utils
 fi
 
 hash easy_install > /dev/null 2>&1
 if [ $? -ne 0 ]
 then
   cd "${WORKING_DIR}" || exit
-  wget https://bootstrap.pypa.io/ez_setup.py -O - | python
+  wget https://bootstrap.pypa.io/ez_setup.py -O - | sudo python
 fi
 
 hash ubireader_extract_files > /dev/null 2>&1
