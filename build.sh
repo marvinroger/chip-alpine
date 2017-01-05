@@ -2,10 +2,14 @@
 
 set -eo pipefail
 
+readonly ALPINE_VERSION="3.5"
+readonly APK_TOOLS_STATIC_VERSION="2.6.8-r1"
+
+
 PATH=/usr/bin:/bin:/usr/local/bin:/usr/sbin
 LATEST_BASEBUILD_URL="http://opensource.nextthing.co/chip/buildroot/stable/latest"
 
-CWD=$(cd "$(dirname "${BASH_SOURCE[0]}")" || exit; pwd -P)
+CWD=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
 WORKING_DIR=$(mktemp -d --tmpdir=/tmp chip-alpine.XXXXXX)
 mkdir -p "${WORKING_DIR}/basebuild/extracted"
 BASEBUILD_DIR="${WORKING_DIR}/basebuild"
@@ -24,12 +28,12 @@ echo "Checking and installing dependencies..."
 sudo apt-get install -y git liblzo2-dev python-lzo mtd-utils
 
 # easy_install
-cd "${WORKING_DIR}" || exit
+cd "${WORKING_DIR}"
 wget https://bootstrap.pypa.io/ez_setup.py -O - | sudo python
 
 # ubi_reader
 git clone https://github.com/jrspruitt/ubi_reader "${WORKING_DIR}/ubi_reader"
-cd "${WORKING_DIR}/ubi_reader" || exit
+cd "${WORKING_DIR}/ubi_reader"
 sudo python setup.py install
 
 #####
@@ -55,11 +59,11 @@ wget -P "${BASEBUILD_DIR}" "${BASEBUILD_ROOTFS_URL}/rootfs.ubi"
 
 echo "Extracting buildroot image to get the kernel..."
 
-cd "$BASEBUILD_DIR/extracted" || exit
+cd "$BASEBUILD_DIR/extracted"
 ubireader_extract_files ../rootfs.ubi
-cd ubifs-root || exit
-cd "$(find . -maxdepth 1 ! -path .|head -n 1)" || exit
-cd rootfs || exit
+cd ubifs-root
+cd "$(find . -maxdepth 1 ! -path .|head -n 1)"
+cd rootfs
 # shellcheck disable=SC1091
 source etc/os-release
 BUILDROOT_VERSION_ID=${VERSION_ID}
@@ -72,11 +76,11 @@ cp -R lib/modules "$BASEBUILD_DIR/extracted"
 
 echo "Getting and setting-up Alpine..."
 
-cd "$ALPINE_DIR" || exit
+cd "$ALPINE_DIR"
 mkdir rootfs
-wget http://dl-cdn.alpinelinux.org/alpine/latest-stable/main/armhf/apk-tools-static-2.6.7-r0.apk
-tar -xzf apk-tools-static-2.6.7-r0.apk
-sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/latest-stable/main -U --allow-untrusted --root ./rootfs --initdb add alpine-base alpine-mirrors
+wget "http://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/main/armhf/apk-tools-static-${APK_TOOLS_STATIC_VERSION}.apk"
+tar -xzf "apk-tools-static-${APK_TOOLS_STATIC_VERSION}.apk"
+sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/main -U --allow-untrusted --root ./rootfs --initdb add alpine-base alpine-mirrors
 
 # shellcheck disable=SC1091
 source rootfs/etc/os-release
@@ -88,11 +92,11 @@ sudo mount -o bind /sys rootfs/sys
 sudo mount -o bind /dev rootfs/dev
 
 # Install packages needed for wireless networking + nano + tzdata and bkeymaps needed for setup-alpine
-sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/latest-stable/main -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools bkeymaps tzdata nano
+sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/main -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools bkeymaps tzdata nano
 
 # Workaround for BAD signature of libc-utils
-wget http://nl.alpinelinux.org/alpine/latest-stable/main/armhf/libc-utils-0.7-r0.apk
-cp libc-utils-0.7-r0.apk rootfs/home
+# wget http://nl.alpinelinux.org/alpine/v${ALPINE_VERSION}/main/armhf/libc-utils-0.7-r0.apk
+# cp libc-utils-0.7-r0.apk rootfs/home
 
 # Setup Alpine from the inside
 cp "${CWD}/chroot_build.sh" rootfs/usr/bin
@@ -134,7 +138,7 @@ ubinize -o rootfs.ubi -m 0x4000 -p 0x200000 -s 16384 ubinize.cfg
 
 echo "Making Alpine release..."
 
-cd "${ALPINE_BUILD_DIR}/images" || exit
+cd "${ALPINE_BUILD_DIR}/images"
 cp "${ALPINE_DIR}/rootfs.ubi" ./
 
 wget "${BASEBUILD_ROOTFS_URL}/sun5i-r8-chip.dtb"
