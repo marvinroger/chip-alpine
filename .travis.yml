@@ -1,0 +1,13 @@
+sudo: required
+services:
+  - docker
+language: bash
+
+script:
+  # prepare qemu
+  - docker run --rm --privileged multiarch/qemu-user-static:register --reset
+  # build alpine
+  - ./build.sh
+    
+after_success:
+  - echo "Done!"
