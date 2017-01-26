@@ -21,7 +21,7 @@ echo "Installing dependencies..."
 
 # sudo apt-get install -y git liblzo2-dev python-lzo mtd-utils
 # apk dependencies
-apk add ca-certificates wget build-base git python2 lzo-dev
+apk add ca-certificates wget build-base git python2 python2-dev lzo-dev
 
 update-ca-certificates
 
@@ -83,7 +83,7 @@ cd "$ALPINE_DIR"
 mkdir rootfs
 wget "http://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/main/armhf/apk-tools-static-${APK_TOOLS_STATIC_VERSION}.apk"
 tar -xzf "apk-tools-static-${APK_TOOLS_STATIC_VERSION}.apk"
-sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/main -U --allow-untrusted --root ./rootfs --initdb add alpine-base alpine-mirrors
+sbin/apk.static -X "http://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/main" -U --allow-untrusted --root ./rootfs --initdb add alpine-base alpine-mirrors
 
 # shellcheck disable=SC1091
 source rootfs/etc/os-release
@@ -95,7 +95,7 @@ mount -o bind /sys rootfs/sys
 mount -o bind /dev rootfs/dev
 
 # Install packages needed for wireless networking + nano + tzdata and bkeymaps needed for setup-alpine
-sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/main -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools bkeymaps tzdata nano
+sbin/apk.static -X "http://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/main" -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools bkeymaps tzdata nano
 
 # Workaround for BAD signature of libc-utils
 # wget http://nl.alpinelinux.org/alpine/v${ALPINE_VERSION}/main/armhf/libc-utils-0.7-r0.apk
