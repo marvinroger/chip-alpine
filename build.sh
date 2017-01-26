@@ -78,7 +78,7 @@ cd "$ALPINE_DIR"
 mkdir rootfs
 apk -X "http://dl-cdn.alpinelinux.org/alpine/${ALPINE_VERSION}/main" -U --allow-untrusted --root ./rootfs --initdb add alpine-base alpine-mirrors || true
 # Install packages needed for wireless networking + nano + tzdata and bkeymaps needed for setup-alpine
-apk -X "http://dl-cdn.alpinelinux.org/alpine/${ALPINE_VERSION}/main" -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools bkeymaps tzdata nano
+apk -X "http://dl-cdn.alpinelinux.org/alpine/${ALPINE_VERSION}/main" -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools bkeymaps tzdata nano || true
 
 # shellcheck disable=SC1091
 source rootfs/etc/os-release
