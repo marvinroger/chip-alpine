@@ -5,7 +5,7 @@ set -eo pipefail
 readonly LATEST_BASEBUILD_URL="http://opensource.nextthing.co/chip/buildroot/stable/latest"
 
 CWD=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
-WORKING_DIR=$(mktemp -d --tmpdir=/tmp chip-alpine.XXXXXX)
+WORKING_DIR=$(mktemp -d -p /tmp chip-alpine.XXXXXX)
 mkdir -p "${WORKING_DIR}/basebuild/extracted"
 BASEBUILD_DIR="${WORKING_DIR}/basebuild"
 mkdir -p "${WORKING_DIR}/alpine"
