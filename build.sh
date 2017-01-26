@@ -76,7 +76,7 @@ echo "Getting and setting-up Alpine..."
 
 cd "$ALPINE_DIR"
 mkdir rootfs
-apk -X "http://dl-cdn.alpinelinux.org/alpine/${ALPINE_VERSION}/main" -U --allow-untrusted --root ./rootfs --initdb add alpine-base alpine-mirrors
+apk -X "http://dl-cdn.alpinelinux.org/alpine/${ALPINE_VERSION}/main" -U --allow-untrusted --root ./rootfs --initdb add alpine-base alpine-mirrors || true
 
 # shellcheck disable=SC1091
 source rootfs/etc/os-release
