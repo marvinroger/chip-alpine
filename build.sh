@@ -83,6 +83,7 @@ apk -X "http://dl-cdn.alpinelinux.org/alpine/${ALPINE_VERSION}/main" -U --allow-
 # shellcheck disable=SC1091
 source rootfs/etc/os-release
 ALPINE_VERSION_ID=${VERSION_ID}
+ALPINE_PRETTY_NAME=${PRETTY_NAME}
 
 cp /etc/resolv.conf rootfs/etc/
 mount -t proc none rootfs/proc
@@ -91,6 +92,7 @@ mount -o bind /dev rootfs/dev
 
 # Setup Alpine from the inside
 cp "${CWD}/chroot_build.sh" rootfs/usr/bin
+chmod +x rootfs/usr/bin/chroot_build.sh
 chroot rootfs /usr/bin/chroot_build.sh
 
 umount rootfs/proc
@@ -147,7 +149,7 @@ tar -zcv -C "${WORKING_DIR}" -f "${WORKING_DIR}/alpine.tar.gz" alpine-build
 echo "Releasing on GitHub..."
 
 TAG_NAME="alpine-${ALPINE_VERSION_ID}_buildroot-${BUILDROOT_VERSION_ID}_$(date +%s)"
-RELEASE_NAME="Alpine ${ALPINE_VERSION_ID} with Buildroot ${BUILDROOT_VERSION_ID} built on $(date +%m/%d/%y)"
+RELEASE_NAME="${ALPINE_PRETTY_NAME} with Buildroot ${BUILDROOT_VERSION_ID} built on $(date +%Y-%m-%d)"
 RELEASE_BODY="Nightly build."
 
 RELEASE_JSON=$(printf '{"tag_name": "%s","target_commitish": "master","name": "%s","body": "%s","draft": false,"prerelease": false}' "$TAG_NAME" "$RELEASE_NAME" "$RELEASE_BODY")
