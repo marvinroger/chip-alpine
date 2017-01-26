@@ -16,9 +16,6 @@ rc-update add mount-ro shutdown
 rc-update add killprocs shutdown
 rc-update add savecache shutdown
 
-# Make root's home directory
-mkdir /root
-
 # Allow root login with no password.
 passwd root -d
 
