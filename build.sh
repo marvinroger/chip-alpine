@@ -93,7 +93,7 @@ mount -o bind /dev rootfs/dev
 # Setup Alpine from the inside
 cp "${CWD}/chroot_build.sh" rootfs/usr/bin
 chmod +x rootfs/usr/bin/chroot_build.sh
-chroot rootfs chroot_build
+chroot rootfs /usr/bin/chroot_build.sh
 
 umount rootfs/proc
 umount rootfs/sys
