@@ -27,6 +27,11 @@ apk add git lzo-dev
 cd "${WORKING_DIR}"
 wget https://bootstrap.pypa.io/ez_setup.py -O - | python
 
+# python-lzo
+git clone https://github.com/jd-boyd/python-lzo "${WORKING_DIR}/python-lzo"
+cd "${WORKING_DIR}/python-lzo"
+python setup.py install
+
 # ubi_reader
 git clone https://github.com/jrspruitt/ubi_reader "${WORKING_DIR}/ubi_reader"
 cd "${WORKING_DIR}/ubi_reader"

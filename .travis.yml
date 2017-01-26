@@ -7,6 +7,7 @@ script:
   # prepare qemu
   - docker run --rm --privileged multiarch/qemu-user-static:register --reset
   # build alpine
+  - chmod +x ./bootstrap.sh
   - docker run --rm -v ${TRAVIS_BUILD_DIR}:/host/ multiarch/alpine:armhf-edge /host/bootstrap.sh
     
 after_success:
