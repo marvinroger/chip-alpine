@@ -77,6 +77,8 @@ echo "Getting and setting-up Alpine..."
 cd "$ALPINE_DIR"
 mkdir rootfs
 apk -X "http://dl-cdn.alpinelinux.org/alpine/${ALPINE_VERSION}/main" -U --allow-untrusted --root ./rootfs --initdb add alpine-base alpine-mirrors || true
+# Install packages needed for wireless networking + nano + tzdata and bkeymaps needed for setup-alpine
+apk -X "http://dl-cdn.alpinelinux.org/alpine/${ALPINE_VERSION}/main" -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools bkeymaps tzdata nano
 
 # shellcheck disable=SC1091
 source rootfs/etc/os-release
@@ -86,9 +88,6 @@ cp /etc/resolv.conf rootfs/etc/
 mount -t proc none rootfs/proc
 mount -o bind /sys rootfs/sys
 mount -o bind /dev rootfs/dev
-
-# Install packages needed for wireless networking + nano + tzdata and bkeymaps needed for setup-alpine
-apk -X "http://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/main" -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools bkeymaps tzdata nano
 
 # Setup Alpine from the inside
 cp "${CWD}/chroot_build.sh" rootfs/usr/bin
