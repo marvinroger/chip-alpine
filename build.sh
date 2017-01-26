@@ -2,11 +2,7 @@
 
 set -eo pipefail
 
-readonly ALPINE_VERSION="3.5"
-readonly APK_TOOLS_STATIC_VERSION="2.6.8-r1"
-
-PATH=/usr/bin:/bin:/usr/local/bin:/usr/sbin
-LATEST_BASEBUILD_URL="http://opensource.nextthing.co/chip/buildroot/stable/latest"
+readonly LATEST_BASEBUILD_URL="http://opensource.nextthing.co/chip/buildroot/stable/latest"
 
 CWD=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
 WORKING_DIR=$(mktemp -d --tmpdir=/tmp chip-alpine.XXXXXX)
@@ -24,16 +20,17 @@ ALPINE_BUILD_DIR="${WORKING_DIR}/alpine-build"
 echo "Checking and installing dependencies..."
 
 # apt dependencies
-sudo apt-get install -y git liblzo2-dev python-lzo mtd-utils
+# sudo apt-get install -y git liblzo2-dev python-lzo mtd-utils
+apk add git lzo-dev
 
 # easy_install
 cd "${WORKING_DIR}"
-wget https://bootstrap.pypa.io/ez_setup.py -O - | sudo python
+wget https://bootstrap.pypa.io/ez_setup.py -O - | python
 
 # ubi_reader
 git clone https://github.com/jrspruitt/ubi_reader "${WORKING_DIR}/ubi_reader"
 cd "${WORKING_DIR}/ubi_reader"
-sudo python setup.py install
+python setup.py install
 
 #####
 # Get the latest base buildroot image
@@ -86,9 +83,9 @@ source rootfs/etc/os-release
 ALPINE_VERSION_ID=${VERSION_ID}
 
 cp /etc/resolv.conf rootfs/etc/
-sudo mount -t proc none rootfs/proc
-sudo mount -o bind /sys rootfs/sys
-sudo mount -o bind /dev rootfs/dev
+mount -t proc none rootfs/proc
+mount -o bind /sys rootfs/sys
+mount -o bind /dev rootfs/dev
 
 # Install packages needed for wireless networking + nano + tzdata and bkeymaps needed for setup-alpine
 sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/main -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools bkeymaps tzdata nano
@@ -101,9 +98,9 @@ sbin/apk.static -X http://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/main 
 cp "${CWD}/chroot_build.sh" rootfs/usr/bin
 chroot rootfs /usr/bin/chroot_build.sh
 
-sudo umount rootfs/proc
-sudo umount rootfs/sys
-sudo umount rootfs/dev
+umount rootfs/proc
+umount rootfs/sys
+umount rootfs/dev
 
 rm rootfs/etc/resolv.conf
 rm rootfs/usr/bin/chroot_build.sh
