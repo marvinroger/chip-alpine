@@ -1,10 +1,9 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 set -eo pipefail
 
 readonly ALPINE_VERSION="3.5"
 readonly APK_TOOLS_STATIC_VERSION="2.6.8-r1"
-
 
 PATH=/usr/bin:/bin:/usr/local/bin:/usr/sbin
 LATEST_BASEBUILD_URL="http://opensource.nextthing.co/chip/buildroot/stable/latest"
