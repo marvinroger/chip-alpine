@@ -21,7 +21,7 @@ echo "Installing dependencies..."
 
 # sudo apt-get install -y git liblzo2-dev python-lzo mtd-utils
 # apk dependencies
-apk add ca-certificates wget git python2 lzo-dev
+apk add ca-certificates wget build-base git python2 lzo-dev
 
 update-ca-certificates
 
