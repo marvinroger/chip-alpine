@@ -2,6 +2,9 @@
 
 set -eo pipefail
 
+CWD=$(cd "$(dirname "$0")"; pwd -P)
+
 apk update
 apk add bash
-./build.sh
+
+"${CWD}/build.sh"
