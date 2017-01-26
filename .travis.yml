@@ -8,7 +8,7 @@ script:
   - docker run --rm --privileged multiarch/qemu-user-static:register --reset
   # build alpine
   - chmod +x ./build.sh
-  - docker run --rm -v ./:/host/ multiarch/alpine:armhf-edge /host/build.sh
+  - docker run --rm -v ${TRAVIS_BUILD_DIR}:/host/ multiarch/alpine:armhf-edge /host/build.sh
     
 after_success:
   - echo "Done!"
