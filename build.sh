@@ -2,6 +2,7 @@
 
 set -eo pipefail
 
+readonly ALPINE_VERSION="edge"
 readonly LATEST_BASEBUILD_URL="http://opensource.nextthing.co/chip/buildroot/stable/latest"
 
 CWD=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
@@ -21,18 +22,12 @@ echo "Installing dependencies..."
 
 # sudo apt-get install -y git liblzo2-dev python-lzo mtd-utils
 # apk dependencies
-apk add ca-certificates wget build-base git python2 python2-dev lzo-dev
+apk add ca-certificates wget build-base git python2 py2-pip python2-dev lzo-dev
 
 update-ca-certificates
 
-# easy_install
-cd "${WORKING_DIR}"
-wget https://bootstrap.pypa.io/ez_setup.py -O - | python
-
 # python-lzo
-git clone https://github.com/jd-boyd/python-lzo "${WORKING_DIR}/python-lzo"
-cd "${WORKING_DIR}/python-lzo"
-python setup.py install
+pip install python-lzo
 
 # ubi_reader
 git clone https://github.com/jrspruitt/ubi_reader "${WORKING_DIR}/ubi_reader"
@@ -81,9 +76,7 @@ echo "Getting and setting-up Alpine..."
 
 cd "$ALPINE_DIR"
 mkdir rootfs
-wget "http://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/main/armhf/apk-tools-static-${APK_TOOLS_STATIC_VERSION}.apk"
-tar -xzf "apk-tools-static-${APK_TOOLS_STATIC_VERSION}.apk"
-sbin/apk.static -X "http://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/main" -U --allow-untrusted --root ./rootfs --initdb add alpine-base alpine-mirrors
+apk -X "http://dl-cdn.alpinelinux.org/alpine/${ALPINE_VERSION}/main" -U --allow-untrusted --root ./rootfs --initdb add alpine-base alpine-mirrors
 
 # shellcheck disable=SC1091
 source rootfs/etc/os-release
@@ -95,11 +88,7 @@ mount -o bind /sys rootfs/sys
 mount -o bind /dev rootfs/dev
 
 # Install packages needed for wireless networking + nano + tzdata and bkeymaps needed for setup-alpine
-sbin/apk.static -X "http://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/main" -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools bkeymaps tzdata nano
-
-# Workaround for BAD signature of libc-utils
-# wget http://nl.alpinelinux.org/alpine/v${ALPINE_VERSION}/main/armhf/libc-utils-0.7-r0.apk
-# cp libc-utils-0.7-r0.apk rootfs/home
+apk -X "http://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VERSION}/main" -U --allow-untrusted --root ./rootfs add wpa_supplicant wireless-tools bkeymaps tzdata nano
 
 # Setup Alpine from the inside
 cp "${CWD}/chroot_build.sh" rootfs/usr/bin
@@ -111,7 +100,6 @@ umount rootfs/dev
 
 rm rootfs/etc/resolv.conf
 rm rootfs/usr/bin/chroot_build.sh
-rm rootfs/home/libc-utils-0.7-r0.apk
 
 #####
 # Prepare rootfs
