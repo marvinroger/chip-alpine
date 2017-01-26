@@ -19,9 +19,11 @@ ALPINE_BUILD_DIR="${WORKING_DIR}/alpine-build"
 
 echo "Installing dependencies..."
 
-# apt dependencies
 # sudo apt-get install -y git liblzo2-dev python-lzo mtd-utils
-apk add git python2 lzo-dev
+# apk dependencies
+apk add ca-certificates wget git python2 lzo-dev
+
+update-ca-certificates
 
 # easy_install
 cd "${WORKING_DIR}"
