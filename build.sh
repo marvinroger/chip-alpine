@@ -27,7 +27,7 @@ echo "Installing dependencies..."
 # apk dependencies
 echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
 apk update
-apk add ca-certificates wget build-base git python2 py2-pip python2-dev lzo-dev tar mtd-utils
+apk add ca-certificates wget curl build-base git python2 py2-pip python2-dev lzo-dev tar mtd-utils
 
 update-ca-certificates
 
@@ -140,12 +140,12 @@ echo "Making Alpine release..."
 cd "${ALPINE_BUILD_DIR}/images"
 cp "${ALPINE_DIR}/rootfs.ubi" ./
 
-wget "${BASEBUILD_ROOTFS_URL}/sun5i-r8-chip.dtb"
-wget "${BASEBUILD_ROOTFS_URL}/sunxi-spl.bin"
-wget "${BASEBUILD_ROOTFS_URL}/sunxi-spl-with-ecc.bin"
-wget "${BASEBUILD_ROOTFS_URL}/uboot-env.bin"
-wget "${BASEBUILD_ROOTFS_URL}/zImage"
-wget "${BASEBUILD_ROOTFS_URL}/u-boot-dtb.bin"
+wget -q "${BASEBUILD_ROOTFS_URL}/sun5i-r8-chip.dtb"
+wget -q "${BASEBUILD_ROOTFS_URL}/sunxi-spl.bin"
+wget -q "${BASEBUILD_ROOTFS_URL}/sunxi-spl-with-ecc.bin"
+wget -q "${BASEBUILD_ROOTFS_URL}/uboot-env.bin"
+wget -q "${BASEBUILD_ROOTFS_URL}/zImage"
+wget -q "${BASEBUILD_ROOTFS_URL}/u-boot-dtb.bin"
 
 tar -zcv -C "${WORKING_DIR}" -f "${WORKING_DIR}/alpine.tar.gz" alpine-build
 
