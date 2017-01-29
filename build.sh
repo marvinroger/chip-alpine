@@ -5,6 +5,10 @@ set -eo pipefail
 readonly ALPINE_VERSION="edge"
 readonly LATEST_BASEBUILD_URL="http://opensource.nextthing.co/chip/buildroot/stable/latest"
 
+readonly GITHUB_REPO="marvinroger/chip-alpine"
+readonly GITHUB_LOGIN_USERNAME="marvinroger"
+# secure readonly GITHUB_ACCESS_TOKEN
+
 CWD=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
 WORKING_DIR=$(mktemp -d -p /tmp chip-alpine.XXXXXX)
 mkdir -p "${WORKING_DIR}/basebuild/extracted"
@@ -23,7 +27,7 @@ echo "Installing dependencies..."
 # apk dependencies
 echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
 apk update
-apk add ca-certificates wget build-base git python2 py2-pip python2-dev lzo-dev mtd-utils
+apk add ca-certificates wget build-base git python2 py2-pip python2-dev lzo-dev tar mtd-utils
 
 update-ca-certificates
 
@@ -50,7 +54,7 @@ fi
 BASEBUILD_ROOTFS_URL="${LATEST_BASEBUILD}/images"
 
 # download basebuild
-wget -P "${BASEBUILD_DIR}" "${BASEBUILD_ROOTFS_URL}/rootfs.ubi"
+wget -q -P "${BASEBUILD_DIR}" "${BASEBUILD_ROOTFS_URL}/rootfs.ubi"
 
 #####
 # Extract the ubi file to get the kernel
@@ -156,9 +160,9 @@ RELEASE_NAME="${ALPINE_PRETTY_NAME} with Buildroot ${BUILDROOT_VERSION_ID} built
 RELEASE_BODY="Nightly build."
 
 RELEASE_JSON=$(printf '{"tag_name": "%s","target_commitish": "master","name": "%s","body": "%s","draft": false,"prerelease": false}' "$TAG_NAME" "$RELEASE_NAME" "$RELEASE_BODY")
-UPLOAD_URL=$(curl -u "marvinroger:${GITHUB_ACCESS_TOKEN}" --data "$RELEASE_JSON" -v --silent "https://api.github.com/repos/marvinroger/chip-alpine/releases" 2>&1 | grep -Po '"upload_url": "\K([a-z0-9:/.-]+)')
+GITHUB_RELEASE_ID=$(curl -u "${GITHUB_LOGIN_USERNAME}:${GITHUB_ACCESS_TOKEN}" --data "$RELEASE_JSON" -v --silent "https://api.github.com/repos/${GITHUB_REPO}/releases" 2>&1 | sed -ne 's/^  "id": \(.*\),$/\1/p')
 
-curl -u "marvinroger:${GITHUB_ACCESS_TOKEN}" -X POST -H "Content-Type: application/gzip" --data-binary "@${WORKING_DIR}/alpine.tar.gz" "${UPLOAD_URL}?name=${TAG_NAME}.tar.gz"
+curl -u "${GITHUB_LOGIN_USERNAME}:${GITHUB_ACCESS_TOKEN}" -X POST -H "Content-Type: application/gzip" --data-binary "@${WORKING_DIR}/alpine.tar.gz" "https://uploads.github.com/repos/${GITHUB_REPO}/releases/${GITHUB_RELEASE_ID}/assets?name=${TAG_NAME}.tar.gz"
 
 echo "Done!"
 
