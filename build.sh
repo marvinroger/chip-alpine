@@ -20,9 +20,10 @@ ALPINE_BUILD_DIR="${WORKING_DIR}/alpine-build"
 
 echo "Installing dependencies..."
 
-# sudo apt-get install -y git liblzo2-dev python-lzo mtd-utils
 # apk dependencies
-apk add ca-certificates wget build-base git python2 py2-pip python2-dev lzo-dev
+echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
+apk update
+apk add ca-certificates wget build-base git python2 py2-pip python2-dev lzo-dev mtd-utils
 
 update-ca-certificates
 
