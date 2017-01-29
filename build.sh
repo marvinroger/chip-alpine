@@ -85,6 +85,7 @@ source rootfs/etc/os-release
 ALPINE_VERSION_ID=${VERSION_ID}
 ALPINE_PRETTY_NAME=${PRETTY_NAME}
 
+cp /usr/bin/qemu-arm-static rootfs/usr/bin/
 cp /etc/resolv.conf rootfs/etc/
 mount -t proc none rootfs/proc
 mount -o bind /sys rootfs/sys
@@ -99,6 +100,7 @@ umount rootfs/proc
 umount rootfs/sys
 umount rootfs/dev
 
+rm rootfs/usr/bin/qemu-arm-static
 rm rootfs/etc/resolv.conf
 rm rootfs/usr/bin/chroot_build.sh
 
