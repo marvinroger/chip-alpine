@@ -170,7 +170,7 @@ make_alpine_release () {
   wget --quiet --output-document "${chip_build_dir}/images/zImage" "${latest_buildroot}/images/zImage"
   wget --quiet --output-document "${chip_build_dir}/images/u-boot-dtb.bin" "${latest_buildroot}/images/u-boot-dtb.bin"
   
-  tar -zcv -C "${chip_build_dir}" -f "${tar_dest}" "${chip_build_dir}"
+  tar -zcv -C "${chip_build_dir}" -f "${tar_dest}" "${chip_build_dir}/images"
 }
 
 gather_rootfs_versions () {
