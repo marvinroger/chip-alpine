@@ -163,14 +163,14 @@ make_alpine_release () {
   local latest_buildroot="${2}"
   local tar_dest="${3}"
   
-  wget --quiet --output-document "${chip_build_dir}/images/sun5i-r8-chip.dtb" "${latest_buildroot}/images/sun5i-r8-chip.dtb"
-  wget --quiet --output-document "${chip_build_dir}/images/sunxi-spl.bin" "${latest_buildroot}/images/sunxi-spl.bin"
-  wget --quiet --output-document "${chip_build_dir}/images/sunxi-spl-with-ecc.bin" "${latest_buildroot}/images/sunxi-spl-with-ecc.bin"
-  wget --quiet --output-document "${chip_build_dir}/images/uboot-env.bin" "${latest_buildroot}/images/uboot-env.bin"
-  wget --quiet --output-document "${chip_build_dir}/images/zImage" "${latest_buildroot}/images/zImage"
-  wget --quiet --output-document "${chip_build_dir}/images/u-boot-dtb.bin" "${latest_buildroot}/images/u-boot-dtb.bin"
+  wget --quiet --output-document "${chip_build_dir}/alpine/images/sun5i-r8-chip.dtb" "${latest_buildroot}/images/sun5i-r8-chip.dtb"
+  wget --quiet --output-document "${chip_build_dir}/alpine/images/sunxi-spl.bin" "${latest_buildroot}/images/sunxi-spl.bin"
+  wget --quiet --output-document "${chip_build_dir}/alpine/images/sunxi-spl-with-ecc.bin" "${latest_buildroot}/images/sunxi-spl-with-ecc.bin"
+  wget --quiet --output-document "${chip_build_dir}/alpine/images/uboot-env.bin" "${latest_buildroot}/images/uboot-env.bin"
+  wget --quiet --output-document "${chip_build_dir}/alpine/images/zImage" "${latest_buildroot}/images/zImage"
+  wget --quiet --output-document "${chip_build_dir}/alpine/images/u-boot-dtb.bin" "${latest_buildroot}/images/u-boot-dtb.bin"
   
-  pushd "${chip_build_dir}/images"
+  pushd "${chip_build_dir}"
   tar -zcv -C "${chip_build_dir}" -f "${tar_dest}" alpine
   popd
 }
@@ -214,7 +214,7 @@ main () {
   local alpine_dir="${working_dir}/alpine"
   mkdir -p "${alpine_dir}"
   local chip_build_dir="${working_dir}/chip-build"
-  mkdir -p "${chip_build_dir}/images"
+  mkdir -p "${chip_build_dir}/alpine/images"
   
   einfo "Installing dependencies..."
   install_apt_dependencies
@@ -245,7 +245,7 @@ main () {
   #####
   
   einfo "Preparing rootfs..."
-  prepare_rootfs "${buildroot_dir}" "${alpine_dir}" "${chip_build_dir}/images/rootfs.ubi"
+  prepare_rootfs "${buildroot_dir}" "${alpine_dir}" "${chip_build_dir}/alpine/images/rootfs.ubi"
   
   #####
   # Make Alpine release
