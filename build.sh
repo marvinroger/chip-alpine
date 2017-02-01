@@ -50,7 +50,7 @@ get_latest_buildroot () {
   
   local _latest_buildroot # _ because else conflict with latest_buildroot in main scope
   _latest_buildroot=$(wget --quiet -O- "${latest_buildroot_url}")
-  eval "$3"="${_latest_buildroot}"
+  eval "${3}"="${_latest_buildroot}"
   local buildroot_rootfs_url
   buildroot_rootfs_url="${_latest_buildroot}/images/rootfs.ubi"
   
@@ -179,12 +179,15 @@ gather_rootfs_versions () {
   
   # shellcheck source=/dev/null
   source "${buildroot_dir}/etc/os-release"
-  eval "$3"="${VERSION_ID}"
+  eval "${3}"="${VERSION_ID}"
+  echo ${VERSION_ID}
   
   # shellcheck source=/dev/null
   source "${alpine_dir}/etc/os-release"
-  eval "$4"="${VERSION_ID}"
-  eval "$5"="${PRETTY_NAME}"
+  echo ${VERSION_ID}
+  echo ${PRETTY_NAME}
+  eval "${4}"="${VERSION_ID}"
+  eval "${5}"="${PRETTY_NAME}"
 }
 
 release_github () {
