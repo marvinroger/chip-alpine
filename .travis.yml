@@ -1,14 +1,11 @@
 sudo: required
-services:
-  - docker
-language: bash
+dist: trusty
+# This attribute does not matter. We just choose some less popular language
+# to don't hog resources and further increase the wait time for other people
+# who use a more popular language / runtime.
+language: erlang
 
 script:
-  # prepare qemu
-  - docker run --rm --privileged multiarch/qemu-user-static:register --reset
-  # build alpine
-  - chmod +x ./bootstrap.sh
-  - docker run --rm --privileged -v ${TRAVIS_BUILD_DIR}:/host/ -e GITHUB_ACCESS_TOKEN="${GITHUB_ACCESS_TOKEN}" multiarch/alpine:armhf-edge /host/bootstrap.sh
-    
-after_success:
-  - echo "Done!"
+  - set -eo pipefail
+  - chmod +x ./build.sh
+  - sudo ./build.sh
