@@ -252,7 +252,9 @@ main () {
   #####
   
   einfo "Making Alpine release..."
-  make_alpine_release "${chip_build_dir}" "${latest_buildroot}" "./alpine.tar.gz"
+  local temp_tar
+  temp_tar=$(mktemp -p /tmp tar.XXXXXX)
+  make_alpine_release "${chip_build_dir}" "${latest_buildroot}" "${temp_tar}"
   
   einfo "Gathering rootfs versions..."
   local buildroot_version_id=""
@@ -269,8 +271,10 @@ main () {
     "alpine-${alpine_version_id}_buildroot-${buildroot_version_id}_$(date +%s)" \
     "${alpine_pretty_name} with Buildroot ${buildroot_version_id} built on $(date +%Y-%m-%d)" \
     "Daily build." \
-    "./alpine.tar.gz"
-  
+    "${temp_tar}"
+    
+  rm "${temp_tar}"
+
   einfo "Done!"  
 }
 
