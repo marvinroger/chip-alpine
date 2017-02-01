@@ -10,7 +10,6 @@ readonly GITHUB_REPO="marvinroger/chip-alpine"
 readonly GITHUB_LOGIN_USERNAME="marvinroger"
 # secure readonly GITHUB_ACCESS_TOKEN
 
-CWD=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
 WORKING_DIR=$(mktemp -d -p /tmp chip-alpine.XXXXXX)
 BUILDROOT_DIR="${WORKING_DIR}/buildroot"
 mkdir -p "${BASEBUILD_DIR}"
@@ -37,7 +36,8 @@ install_apt_dependencies () {
 }
 
 install_ubi_reader () {
-  local temp_dir=$(mktemp -d -p /tmp ubi_reader.XXXXXX)
+  local temp_dir
+  temp_dir=$(mktemp -d -p /tmp ubi_reader.XXXXXX)
   git clone https://github.com/jrspruitt/ubi_reader "${temp_dir}"
   pushd "${temp_dir}"
   python setup.py install
@@ -56,11 +56,14 @@ get_latest_buildroot () {
   local latest_buildroot_url="${1}"
   local buildroot_dir="${2}"
   
-  local latest_buildroot="$(wget -q -O- ${latest_buildroot_url})"
-  eval $3="${latest_buildroot}"
-  local buildroot_rootfs_url="${latest_buildroot}/images/rootfs.ubi"
+  local latest_buildroot
+  latest_buildroot=$(wget --quiet -O- "${latest_buildroot_url}")
+  eval "$3"="${latest_buildroot}"
+  local buildroot_rootfs_url
+  buildroot_rootfs_url="${latest_buildroot}/images/rootfs.ubi"
   
-  local temp_dir=$(mktemp -d -p /tmp buildroot.XXXXXX)
+  local temp_dir
+  temp_dir=$(mktemp -d -p /tmp buildroot.XXXXXX)
   
   # download buildroot
   wget --quiet --output-document "${temp_dir}/rootfs.ubi" "${buildroot_rootfs_url}"
@@ -86,7 +89,7 @@ prepare_alpine () {
   local alpine_version="${1}"
   local alpine_dir="${2}"
 
-  CHROOT_KEEP_VARS="" ALPINE_PACKAGES="wpa_supplicant wireless-tools bkeymaps tzdata nano" alpine-chroot-install -d "${alpine_dir}" -a armhf -b "${alpine_dir}" -m http://dl-cdn.alpinelinux.org/alpine/
+  CHROOT_KEEP_VARS="" ALPINE_PACKAGES="wpa_supplicant wireless-tools bkeymaps tzdata nano" alpine-chroot-install -d "${alpine_dir}" -a armhf -b "${alpine_version}" -m http://dl-cdn.alpinelinux.org/alpine/
   
   "${alpine_dir}/enter-chroot" root <<-EOF
     set -e
@@ -131,7 +134,8 @@ prepare_rootfs () {
   local alpine_dir="${2}"
   local ubi_dest="${3}"
   
-  local temp_dir=$(mktemp -d -p /tmp ubi.XXXXXX)
+  local temp_dir
+  temp_dir=$(mktemp -d -p /tmp ubi.XXXXXX)
   
   cp --archive "${buildroot_dir}/boot/." "${alpine_dir}/boot"
   cp --archive "${buildroot_dir}/lib/modules/." "${alpine_dir}/lib/modules"
@@ -172,88 +176,92 @@ gather_rootfs_versions () {
   local buildroot_dir="${1}"
   local alpine_dir="${2}"
   
+  # shellcheck source=/dev/null
   source "${buildroot_dir}/etc/os-release"
-  eval $3="${VERSION_ID}"
+  eval "$3"="${VERSION_ID}"
   
+  # shellcheck source=/dev/null
   source "${alpine_dir}/etc/os-release"
-  eval $4="${VERSION_ID}"
-  eval $5="${PRETTY_NAME}"
+  eval "$4"="${VERSION_ID}"
+  eval "$5"="${PRETTY_NAME}"
 }
 
 release_github () {
   local repo="${1}"
   local username="${2}"
-  local acess_token="${3}"
+  local access_token="${3}"
   local tag_name="${4}"
   local release_name="${5}"
   local release_body="${6}"
   local tar_location="${7}"
   
-  local release_json=$(printf '{"tag_name": "%s","target_commitish": "master","name": "%s","body": "%s","draft": false,"prerelease": false}' "${tag_name}" "${release_name}" "${release_body}")
-  local github_release_id=$(curl -u "${username}:${access_token}" --data "${release_json}" -v --silent "https://api.github.com/repos/${repo}/releases" 2>&1 | sed -ne 's/^  "id": \(.*\),$/\1/p')
+  local release_json
+  release_json=$(printf '{"tag_name": "%s","target_commitish": "master","name": "%s","body": "%s","draft": false,"prerelease": false}' "${tag_name}" "${release_name}" "${release_body}")
+  local github_release_id
+  github_release_id=$(curl -u "${username}:${access_token}" --data "${release_json}" -v --silent "https://api.github.com/repos/${repo}/releases" 2>&1 | sed -ne 's/^  "id": \(.*\),$/\1/p')
   
   curl -u "${username}:${access_token}" -X POST -H "Content-Type: application/gzip" --data-binary "@${tar_location}" "https://uploads.github.com/repos/${repo}/releases/${github_release_id}/assets?name=${tag_name}.tar.gz"
 }
 
-#####
-# Install dependencies
-#####
+main () {
+  einfo "Installing dependencies..."
+  install_apt_dependencies
+  
+  einfo "Installing ubi_reader..."
+  install_ubi_reader
+  
+  einfo "Installing alpine-chroot-install..."
+  install_alpine_chroot_install "${ALPINE_CHROOT_INSTALL_VERSION}"
+  
+  #####
+  # Get the latest base buildroot image
+  #####
+  
+  einfo "Getting latest buildroot..."
+  local latest_buildroot=""
+  get_latest_buildroot "${LATEST_BUILDROOT_URL}" "${BUILDROOT_DIR}" "latest_buildroot"
+  
+  #####
+  # Get and set-up Alpine
+  #####
+  
+  einfo "Getting and setting-up Alpine..."
+  prepare_alpine "${ALPINE_VERSION}" "${ALPINE_DIR}"
+  
+  #####
+  # Prepare rootfs
+  #####
+  
+  einfo "Preparing rootfs..."
+  prepare_rootfs "${BUILDROOT_DIR}" "${ALPINE_DIR}" "${CHIP_BUILD_DIR}/images/rootfs.ubi"
+  
+  #####
+  # Make Alpine release
+  #####
+  
+  einfo "Making Alpine release..."
+  make_alpine_release "${CHIP_BUILD_DIR}" "${latest_buildroot}" "./alpine.tar.gz"
+  
+  einfo "Gathering rootfs versions..."
+  local buildroot_version_id=""
+  local alpine_version_id=""
+  local alpine_pretty_name=""
+  gather_rootfs_versions "${BUILDROOT_DIR}" "${ALPINE_DIR}" "buildroot_version_id" "alpine_version_id" "alpine_pretty_name"
+  
+  #####
+  # Create GitHub release
+  #####
+  
+  einfo "Releasing on GitHub..."
+  release_github "${GITHUB_REPO}" "${GITHUB_LOGIN_USERNAME}" "${GITHUB_ACCESS_TOKEN}" \
+    "alpine-${alpine_version_id}_buildroot-${buildroot_version_id}_$(date +%s)" \
+    "${alpine_pretty_name} with Buildroot ${buildroot_version_id} built on $(date +%Y-%m-%d)" \
+    "Daily build." \
+    "./alpine.tar.gz"
+  
+  einfo "Done!"  
+}
 
-einfo "Installing dependencies..."
-install_apt_dependencies
-
-einfo "Installing ubi_reader..."
-install_ubi_reader
-
-einfo "Installing alpine-chroot-install..."
-install_alpine_chroot_install "${ALPINE_CHROOT_INSTALL_VERSION}"
-
-#####
-# Get the latest base buildroot image
-#####
-
-einfo "Getting latest buildroot..."
-local latest_buildroot=""
-get_latest_buildroot "${LATEST_BUILDROOT_URL}" "${BUILDROOT_DIR}" "latest_buildroot"
-
-#####
-# Get and set-up Alpine
-#####
-
-einfo "Getting and setting-up Alpine..."
-prepare_alpine "${ALPINE_VERSION}" "${ALPINE_DIR}"
-
-#####
-# Prepare rootfs
-#####
-
-einfo "Preparing rootfs..."
-prepare_rootfs "${BUILDROOT_DIR}" "${ALPINE_DIR}" "${CHIP_BUILD_DIR}/images/rootfs.ubi"
-
-#####
-# Make Alpine release
-#####
-
-einfo "Making Alpine release..."
-make_alpine_release "${CHIP_BUILD_DIR}" "${latest_buildroot}" "./alpine.tar.gz"
-
-einfo "Gathering rootfs versions..."
-local buildroot_version_id=""
-local alpine_version_id=""
-local alpine_pretty_name=""
-gather_rootfs_versions "${BUILDROOT_DIR}" "${ALPINE_DIR}" "buildroot_version_id" "alpine_version_id" "alpine_pretty_name"
-
-#####
-# Create GitHub release
-#####
-
-einfo "Releasing on GitHub..."
-release_github "${GITHUB_REPO}" "${GITHUB_LOGIN_USERNAME}" "${GITHUB_ACCESS_TOKEN}" \
-  "alpine-${alpine_version_id}_buildroot-${buildroot_version_id}_$(date +%s)" \
-  "${alpine_pretty_name} with Buildroot ${buildroot_version_id} built on $(date +%Y-%m-%d)" \
-  "Daily build." \
-  "./alpine.tar.gz"
-
-einfo "Done!"
+main
 
 # tar zxvf alpine.tar.gz && sudo BUILDROOT_OUTPUT_DIR=alpinebuild/ ./chip-fel-flash.sh
