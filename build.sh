@@ -119,6 +119,15 @@ prepare_alpine () {
     echo ttyS0::respawn:/sbin/getty -L ttyS0 115200 vt102 >> /etc/inittab
     echo ttyGS0::respawn:/sbin/getty -L ttyGS0 115200 vt102 >> /etc/inittab
 EOF
+  
+  umount "${alpine_dir}/proc"
+  umount "${alpine_dir}/sys"
+  umount "${alpine_dir}/dev"
+  umount "${alpine_dir}$(pwd)"
+  
+  rm "${alpine_dir}/usr/bin/qemu-arm-static"
+  rm "${alpine_dir}/etc/resolv.conf"
+  rm "${alpine_dir}/enter-chroot"
 }
 
 prepare_rootfs () {
