@@ -171,7 +171,7 @@ make_alpine_release () {
   wget --quiet --output-document "${chip_build_dir}/images/u-boot-dtb.bin" "${latest_buildroot}/images/u-boot-dtb.bin"
   
   pushd "${chip_build_dir}/images"
-  tar -zcv -C "${chip_build_dir}" -f "${tar_dest}" ./
+  tar -zcv -C "${chip_build_dir}" -f "${tar_dest}" alpine
   popd
 }
 
@@ -280,4 +280,4 @@ main () {
 
 main
 
-# tar zxvf alpine.tar.gz && sudo BUILDROOT_OUTPUT_DIR=alpinebuild/ ./chip-fel-flash.sh
+# tar zxvf alpine*.tar.gz && sudo BUILDROOT_OUTPUT_DIR=alpine/ ./chip-fel-flash.sh

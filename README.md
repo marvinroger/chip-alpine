@@ -6,9 +6,9 @@ Thanks to [Akidan](https://bbs.nextthing.co/users/Akidan) for [the initial resea
 
 ## Installation
 
-* Download [the latest release](https://github.com/marvinroger/chip-alpine/releases/latest).
+* Download [the latest release](https://github.com/marvinroger/chip-alpine/releases).
 * Extract it: `tar zxvf alpine*.tar.gz`
-* From within the C.H.I.P. SDK: `sudo BUILDROOT_OUTPUT_DIR=alpine-build/ ./chip-fel-flash.sh`
+* From within the C.H.I.P. SDK: `sudo BUILDROOT_OUTPUT_DIR=alpine/ ./chip-fel-flash.sh`
 
 ## Usage
 
