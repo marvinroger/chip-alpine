@@ -10,14 +10,6 @@ readonly GITHUB_REPO="marvinroger/chip-alpine"
 readonly GITHUB_LOGIN_USERNAME="marvinroger"
 # secure readonly GITHUB_ACCESS_TOKEN
 
-WORKING_DIR=$(mktemp -d -p /tmp chip-alpine.XXXXXX)
-BUILDROOT_DIR="${WORKING_DIR}/buildroot"
-mkdir -p "${BASEBUILD_DIR}"
-ALPINE_DIR="${WORKING_DIR}/alpine"
-mkdir -p "${ALPINE_DIR}"
-CHIP_BUILD_DIR="${WORKING_DIR}/chip-build"
-mkdir -p "${CHIP_BUILD_DIR}/images"
-
 die () {
 	printf '\033[1;31mERROR:\033[0m %s\n' "$@" >&2  # bold red
 	exit 1
@@ -204,6 +196,15 @@ release_github () {
 }
 
 main () {
+  local working_dir
+  working_dir=$(mktemp -d -p /tmp chip-alpine.XXXXXX)
+  local buildroot_dir="${working_dir}/buildroot"
+  mkdir -p "${buildroot_dir}"
+  local alpine_dir="${working_dir}/alpine"
+  mkdir -p "${alpine_dir}"
+  local chip_build_dir="${working_dir}/chip-build"
+  mkdir -p "${chip_build_dir}/images"
+  
   einfo "Installing dependencies..."
   install_apt_dependencies
   
@@ -219,34 +220,34 @@ main () {
   
   einfo "Getting latest buildroot..."
   local latest_buildroot=""
-  get_latest_buildroot "${LATEST_BUILDROOT_URL}" "${BUILDROOT_DIR}" "latest_buildroot"
+  get_latest_buildroot "${LATEST_BUILDROOT_URL}" "${buildroot_dir}" "latest_buildroot"
   
   #####
   # Get and set-up Alpine
   #####
   
   einfo "Getting and setting-up Alpine..."
-  prepare_alpine "${ALPINE_VERSION}" "${ALPINE_DIR}"
+  prepare_alpine "${ALPINE_VERSION}" "${alpine_dir}"
   
   #####
   # Prepare rootfs
   #####
   
   einfo "Preparing rootfs..."
-  prepare_rootfs "${BUILDROOT_DIR}" "${ALPINE_DIR}" "${CHIP_BUILD_DIR}/images/rootfs.ubi"
+  prepare_rootfs "${buildroot_dir}" "${alpine_dir}" "${chip_build_dir}/images/rootfs.ubi"
   
   #####
   # Make Alpine release
   #####
   
   einfo "Making Alpine release..."
-  make_alpine_release "${CHIP_BUILD_DIR}" "${latest_buildroot}" "./alpine.tar.gz"
+  make_alpine_release "${chip_build_dir}" "${latest_buildroot}" "./alpine.tar.gz"
   
   einfo "Gathering rootfs versions..."
   local buildroot_version_id=""
   local alpine_version_id=""
   local alpine_pretty_name=""
-  gather_rootfs_versions "${BUILDROOT_DIR}" "${ALPINE_DIR}" "buildroot_version_id" "alpine_version_id" "alpine_pretty_name"
+  gather_rootfs_versions "${buildroot_dir}" "${alpine_dir}" "buildroot_version_id" "alpine_version_id" "alpine_pretty_name"
   
   #####
   # Create GitHub release
