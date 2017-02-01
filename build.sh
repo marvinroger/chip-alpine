@@ -48,11 +48,11 @@ get_latest_buildroot () {
   local latest_buildroot_url="${1}"
   local buildroot_dir="${2}"
   
-  local latest_buildroot
-  latest_buildroot=$(wget --quiet -O- "${latest_buildroot_url}")
-  eval "$3"="${latest_buildroot}"
+  local _latest_buildroot # _ because else conflict with latest_buildroot in main scope
+  _latest_buildroot=$(wget --quiet -O- "${latest_buildroot_url}")
+  eval "$3"="${_latest_buildroot}"
   local buildroot_rootfs_url
-  buildroot_rootfs_url="${latest_buildroot}/images/rootfs.ubi"
+  buildroot_rootfs_url="${_latest_buildroot}/images/rootfs.ubi"
   
   local temp_dir
   temp_dir=$(mktemp -d -p /tmp buildroot.XXXXXX)
@@ -163,11 +163,7 @@ make_alpine_release () {
   local latest_buildroot="${2}"
   local tar_dest="${3}"
   
-  echo $1
-  echo $2
-  echo $3
-  
-  wget --output-document "${chip_build_dir}/images/sun5i-r8-chip.dtb" "${latest_buildroot}/images/sun5i-r8-chip.dtb"
+  wget --quiet --output-document "${chip_build_dir}/images/sun5i-r8-chip.dtb" "${latest_buildroot}/images/sun5i-r8-chip.dtb"
   wget --quiet --output-document "${chip_build_dir}/images/sunxi-spl.bin" "${latest_buildroot}/images/sunxi-spl.bin"
   wget --quiet --output-document "${chip_build_dir}/images/sunxi-spl-with-ecc.bin" "${latest_buildroot}/images/sunxi-spl-with-ecc.bin"
   wget --quiet --output-document "${chip_build_dir}/images/uboot-env.bin" "${latest_buildroot}/images/uboot-env.bin"
