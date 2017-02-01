@@ -50,7 +50,7 @@ get_latest_buildroot () {
   
   local _latest_buildroot # _ because else conflict with latest_buildroot in main scope
   _latest_buildroot=$(wget --quiet -O- "${latest_buildroot_url}")
-  eval "${3}"="\"${_latest_buildroot}\""
+  eval "${3}=\"${_latest_buildroot}\""
   local buildroot_rootfs_url
   buildroot_rootfs_url="${_latest_buildroot}/images/rootfs.ubi"
   
@@ -170,7 +170,9 @@ make_alpine_release () {
   wget --quiet --output-document "${chip_build_dir}/images/zImage" "${latest_buildroot}/images/zImage"
   wget --quiet --output-document "${chip_build_dir}/images/u-boot-dtb.bin" "${latest_buildroot}/images/u-boot-dtb.bin"
   
-  tar -zcv -C "${chip_build_dir}" -f "${tar_dest}" "${chip_build_dir}/images"
+  pushd "${chip_build_dir}/images"
+  tar -zcv -C "${chip_build_dir}" -f "${tar_dest}" ./
+  popd
 }
 
 gather_rootfs_versions () {
@@ -179,12 +181,12 @@ gather_rootfs_versions () {
   
   # shellcheck source=/dev/null
   source "${buildroot_dir}/etc/os-release"
-  eval "${3}"="\"${VERSION_ID}\""
+  eval "${3}=\"${VERSION_ID}\""
   
   # shellcheck source=/dev/null
   source "${alpine_dir}/etc/os-release"
-  eval "${4}"="\"${VERSION_ID}\""
-  eval "${5}"="\"${PRETTY_NAME}\""
+  eval "${4}=\"${VERSION_ID}\""
+  eval "${5}=\"${PRETTY_NAME}\""
 }
 
 release_github () {
