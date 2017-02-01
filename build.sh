@@ -163,7 +163,11 @@ make_alpine_release () {
   local latest_buildroot="${2}"
   local tar_dest="${3}"
   
-  wget --quiet --output-document "${chip_build_dir}/images/sun5i-r8-chip.dtb" "${latest_buildroot}/images/sun5i-r8-chip.dtb"
+  echo $1
+  echo $2
+  echo $3
+  
+  wget --output-document "${chip_build_dir}/images/sun5i-r8-chip.dtb" "${latest_buildroot}/images/sun5i-r8-chip.dtb"
   wget --quiet --output-document "${chip_build_dir}/images/sunxi-spl.bin" "${latest_buildroot}/images/sunxi-spl.bin"
   wget --quiet --output-document "${chip_build_dir}/images/sunxi-spl-with-ecc.bin" "${latest_buildroot}/images/sunxi-spl-with-ecc.bin"
   wget --quiet --output-document "${chip_build_dir}/images/uboot-env.bin" "${latest_buildroot}/images/uboot-env.bin"
