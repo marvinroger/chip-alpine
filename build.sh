@@ -81,7 +81,7 @@ prepare_alpine () {
   local alpine_version="${1}"
   local alpine_dir="${2}"
 
-  CHROOT_KEEP_VARS="" ALPINE_PACKAGES="wpa_supplicant wireless-tools bkeymaps tzdata nano" alpine-chroot-install -d "${alpine_dir}" -a armhf -b "${alpine_version}" -m http://dl-cdn.alpinelinux.org/alpine/
+  CHROOT_KEEP_VARS="" ALPINE_PACKAGES="wpa_supplicant wireless-tools bkeymaps tzdata nano" alpine-chroot-install -d "${alpine_dir}" -a armhf -b "${alpine_version}" -m http://nl.alpinelinux.org/alpine/
   
   "${alpine_dir}/enter-chroot" root <<-EOF
     set -e
