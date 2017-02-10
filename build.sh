@@ -2,7 +2,7 @@
 
 set -eo pipefail
 
-readonly ALPINE_CHROOT_INSTALL_VERSION="0.1.1"
+readonly ALPINE_CHROOT_INSTALL_VERSION="0.1.3"
 readonly ALPINE_VERSION="latest-stable"
 readonly LATEST_BUILDROOT_URL="http://opensource.nextthing.co/chip/buildroot/stable/latest"
 
