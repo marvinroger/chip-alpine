@@ -2,7 +2,7 @@
 
 set -eo pipefail
 
-readonly ALPINE_CHROOT_INSTALL_VERSION="0.1.3"
+readonly ALPINE_CHROOT_INSTALL_VERSION="0.6.0"
 readonly ALPINE_VERSION="latest-stable"
 readonly LATEST_BUILDROOT_URL="http://opensource.nextthing.co/chip/buildroot/stable/latest"
 
@@ -40,7 +40,7 @@ install_ubi_reader () {
 install_alpine_chroot_install () {
   local version="${1}"
 
-  wget --quiet --output-document /usr/local/bin/alpine-chroot-install "https://raw.githubusercontent.com/jirutka/alpine-chroot-install/v${version}/alpine-chroot-install"
+  wget --quiet --output-document /usr/local/bin/alpine-chroot-install "https://raw.githubusercontent.com/alpinelinux/alpine-chroot-install/v${version}/alpine-chroot-install"
   chmod +x /usr/local/bin/alpine-chroot-install
 }
 
@@ -83,7 +83,7 @@ prepare_alpine () {
 
   CHROOT_KEEP_VARS="" ALPINE_PACKAGES="wpa_supplicant wireless-tools bkeymaps tzdata nano" alpine-chroot-install -d "${alpine_dir}" -a armhf -b "${alpine_version}"
   
-  "${alpine_dir}/enter-chroot" root <<-EOF
+  "${alpine_dir}/enter-chroot" -u root <<-EOF
     set -e
     # Needed services
     rc-update add devfs sysinit
